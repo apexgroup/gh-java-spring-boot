@@ -62,3 +62,55 @@ dependencies {
 tasks.named("compileTestJava") {
 	options.nullability.checking = "tests"
 }
+
+task regenerateTestCertificates(group: "build", description: "Regenerate test certificates") {
+	doLast {
+		def resources = file("src/testFixtures/resources/org/springframework/boot/web/server")
+		def servletDir = new File(resources, "servlet")
+		def reactiveDir = new File(resources, "reactive")
+		
+		// Regenerate for servlet
+		regenerateCertificatesForDir(servletDir)
+		
+		// Regenerate for reactive
+		regenerateCertificatesForDir(reactiveDir)
+	}
+}
+
+def regenerateCertificatesForDir(File dir) {
+	def keyFile = new File(dir, "test-key.pem")
+	def certFile = new File(dir, "test-cert.pem")
+	def p12File = new File(dir, "test.p12")
+	def jksFile = new File(dir, "test.jks")
+	
+	// Generate new key and certificate
+	exec {
+		commandLine "openssl", "req", "-newkey", "rsa:2048", "-nodes",
+			"-keyout", keyFile.absolutePath,
+			"-x509", "-days", "36500", "-out", certFile.absolutePath,
+			"-subj", "/C=US/ST=California/L=Palo Alto/O=VMware/OU=Spring/CN=localhost",
+			"-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1"
+	}
+	
+	// Generate PKCS12 file
+	exec {
+		commandLine "openssl", "pkcs12", "-export",
+			"-in", certFile.absolutePath,
+			"-inkey", keyFile.absolutePath,
+			"-out", p12File.absolutePath,
+			"-name", "test-alias",
+			"-passout", "pass:secret"
+	}
+	
+	// Generate JKS file
+	exec {
+		commandLine "keytool", "-importkeystore",
+			"-srckeystore", p12File.absolutePath,
+			"-srcstoretype", "PKCS12",
+			"-srcstorepass", "secret",
+			"-destkeystore", jksFile.absolutePath,
+			"-deststoretype", "JKS",
+			"-deststorepass", "password",
+			"-noprompt"
+	}
+}
