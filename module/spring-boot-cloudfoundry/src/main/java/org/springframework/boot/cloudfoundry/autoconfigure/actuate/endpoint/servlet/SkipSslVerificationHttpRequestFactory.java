@@ -82,7 +82,7 @@ class SkipSslVerificationHttpRequestFactory extends SimpleClientHttpRequestFacto
 		public void checkClientTrusted(X509Certificate[] chain, String authType) {
 		}
 
-		@Override
+		@Override // noboost
 		public void checkServerTrusted(X509Certificate[] chain, String authType) {
 		}
 
