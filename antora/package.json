@@ -12,6 +12,9 @@
     "@asciidoctor/tabs": "1.0.0-beta.6",
     "@springio/asciidoctor-extensions": "1.0.0-alpha.18"
   },
+  "overrides": {
+    "glob": "^9.3.5"
+  },
   "config": {
     "ui-bundle-url": "https://github.com/spring-io/antora-ui-spring/releases/download/v0.4.25/ui-bundle.zip"
   }
